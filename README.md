@@ -1,5 +1,5 @@
 # HackBio-Internship-stage-1
-This repository contains stage 0 task from HackBio intership
+This repository contains stage 1 tasks from HackBio intership
 
 # Tasks
 1. Write a function for translating DNA to protein
