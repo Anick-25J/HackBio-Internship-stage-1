@@ -1,1 +1,211 @@
-# Stage 1 task
+## Stage 1 task
+
+# 1. Function to Translate DNA to Protein
+
+"""
+I (Isoleucine): ATA, ATC, ATT
+M (Methionine): ATG
+T (Threonine): ACA, ACC, ACG, ACT
+N (Asparagine): AAC, AAT
+K (Lysine): AAA, AAG
+S (Serine): AGC, AGT, TCA, TCC, TCG, TCT
+R (Arginine): AGA, AGG, CGA, CGC, CGG, CGT
+L (Leucine): CTA, CTC, CTG, CTT, TTA, TTG
+P (Proline): CCA, CCC, CCG, CCT
+H (Histidine): CAC, CAT
+Q (Glutamine): CAA, CAG
+V (Valine): GTA, GTC, GTG, GTT
+A (Alanine): GCA, GCC, GCG, GCT
+D (Aspartic acid): GAC, GAT
+E (Glutamic acid): GAA, GAG
+G (Glycine): GGA, GGC, GGG, GGT
+F (Phenylalanine): TTC, TTT
+Y (Tyrosine): TAC, TAT
+* (Stop codon): TAA, TAG, TGA
+
+"""
+###
+
+def dna_to_protein(dna_sequence):
+    codon_table = {
+        'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
+        'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
+        'AAC': 'N', 'AAT': 'N', 'AAA': 'K', 'AAG': 'K',
+        'AGC': 'S', 'AGT': 'S', 'AGA': 'R', 'AGG': 'R',
+        'CTA': 'L', 'CTC': 'L', 'CTG': 'L', 'CTT': 'L',
+        'CCA': 'P', 'CCC': 'P', 'CCG': 'P', 'CCT': 'P',
+        'CAC': 'H', 'CAT': 'H', 'CAA': 'Q', 'CAG': 'Q',
+        'CGA': 'R', 'CGC': 'R', 'CGG': 'R', 'CGT': 'R',
+        'GTA': 'V', 'GTC': 'V', 'GTG': 'V', 'GTT': 'V',
+        'GCA': 'A', 'GCC': 'A', 'GCG': 'A', 'GCT': 'A',
+        'GAC': 'D', 'GAT': 'D', 'GAA': 'E', 'GAG': 'E',
+        'GGA': 'G', 'GGC': 'G', 'GGG': 'G', 'GGT': 'G',
+        'TCA': 'S', 'TCC': 'S', 'TCG': 'S', 'TCT': 'S',
+        'TTC': 'F', 'TTT': 'F', 'TTA': 'L', 'TTG': 'L',
+        'TAC': 'Y', 'TAT': 'Y', 'TAA': '*', 'TAG': '*', 'TGA': '*'
+    }
+
+    protein = ''
+    for i in range(0, len(dna_sequence) - 2, 3):
+        codon = dna_sequence[i:i + 3]
+        protein += codon_table.get(codon, '?')  # '?' for invalid codons
+
+    return protein
+
+# Example usage
+print(dna_to_protein("ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"))
+
+
+
+# 2. Function for logistic Growth Curve 
+
+def bacterial_growth_sim(r, K, N0, T, dt, lag_duration, log_duration, stationary_duration, death_duration):
+    """
+    Simulates bacterial population growth with Lag, Log, Stationary, and Death phases.
+
+    Parameters:
+    r                : Growth rate
+    K                : Carrying capacity
+    N0               : Initial population
+    T                : Total simulation time
+    dt               : Time step
+    lag_duration     : Fixed duration for lag phase
+    log_duration     : Fixed duration for log (exponential) phase
+    stationary_duration : Fixed duration for stationary phase
+    death_duration   : Fixed duration for death phase
+    """
+    t_values = []  # Time points
+    N_values = []  # Population values
+    N = N0  # Initial population
+    t = 0
+
+    # Define phase transition time points
+    lag_end = lag_duration
+    log_end = lag_end + log_duration
+    stationary_end = log_end + stationary_duration
+    death_start = stationary_end  # Death phase starts after stationary phase
+
+    while t <= T:
+        t_values.append(t)
+        N_values.append(N)
+
+        # 1. Lag Phase: Slow adaptation, minimal growth
+        if t < lag_end:
+            dN = (0.05 * r * N) * dt  # Small growth to simulate adaptation
+
+        # 2. Log (Exponential) Phase: Rapid growth
+        elif lag_end <= t < log_end:
+            dN = (r * N) * dt  # Exponential growth
+
+        # 3. Stationary Phase: Population stabilizes near carrying capacity
+        elif log_end <= t < stationary_end:
+            dN = 0  # No significant growth or decline (stable population)
+
+        # 4. Death Phase: Population declines due to resource depletion
+        else:
+            dN = -0.1 * N * dt  # Population starts declining
+
+        N += dN  # Update population
+        t += dt  # Increment time
+
+        # Ensure population stays within realistic limits
+        if N > K:
+            N = K
+        elif N < 0:
+            N = 0
+
+    return t_values, N_values  # Return time points and population values
+
+# Example usage
+t_vals, N_vals = bacterial_growth_sim(
+    r=0.1, K=1000, N0=10, T=200, dt=1, 
+    lag_duration=10, log_duration=30, stationary_duration=50, death_duration=50
+)
+
+# Print results
+for i in range(len(t_vals)):
+    print(f"Time: {t_vals[i]}, Population: {round(N_vals[i], 2)}")
+
+
+# Function for generating 100 growth curves
+
+def generate_growth_curves(num_curves=100):
+    """
+    Generates multiple bacterial growth curves with random variations in parameters.
+    """
+    data = []  # List to store growth data
+    
+    for i in range(num_curves):
+        # Define parameters with some variations
+        r = 0.05 + (i % 5) * 0.01  # Vary growth rate slightly
+        K = 800 + (i % 4) * 50  # Vary carrying capacity
+        N0 = 5 + (i % 3) * 3  # Vary initial population
+        T = 200
+        dt = 1
+        lag_duration = 5 + (i % 5) * 2
+        log_duration = 20 + (i % 4) * 5
+        stationary_duration = 40 + (i % 3) * 10
+        death_duration = 50 + (i % 2) * 10
+        
+        # Generate growth curve
+        t_vals, N_vals = bacterial_growth_sim(r, K, N0, T, dt, lag_duration, log_duration, stationary_duration, death_duration)
+        
+        # Store data
+        for t, N in zip(t_vals, N_vals):
+            data.append({
+                "Curve_ID": i + 1,
+                "Time": t,
+                "Population": round(N, 2)
+            })
+    
+    return data  # Returns list of dictionaries (can be converted to DataFrame)
+
+
+# Print first 10 rows
+for row in growth_data[:10]:
+    print(row)
+
+
+
+# 3. Function to determine time to reach 80% of carrying capacity
+
+def time_to_80_percent_of_capacity(r, K, N0, T, dt, lag_duration, log_duration, stationary_duration, death_duration):
+    
+    t_values, N_values = bacterial_growth_sim(r, K, N0, T, dt, lag_duration, log_duration, stationary_duration, death_duration)
+    
+    # 80% of the carrying capacity
+    target_population = 0.8 * K
+    
+    # Find the time when the population first exceeds or reaches 80% of K
+    for t, N in zip(t_values, N_values):
+        if N >= target_population:
+            return t  # Return the time when 80% of K is reached
+    
+    return None  # If the population never reaches 80% of K within the given time
+
+# Example usage
+time_80_percent = time_to_80_percent_of_capacity(
+    r=0.1, K=1000, N0=10, T=200, dt=1, 
+    lag_duration=10, log_duration=30, stationary_duration=50, death_duration=50
+)
+
+print(f"Time to reach 80% of carrying capacity: {time_80_percent}")
+
+
+# 4. Function for hamming distance between slack and twitter usernames
+
+def hamming_distance(str1, str2):
+    # Pad the shorter string with spaces if necessary
+    max_len = max(len(str1), len(str2))
+    str1 = str1.ljust(max_len)
+    str2 = str2.ljust(max_len)
+    
+    # Count the number of differing characters
+    distance = sum(el1 != el2 for el1, el2 in zip(str1, str2))
+    
+    return distance
+
+# Example usage:
+slack_username = "Anick"
+twitter_handle = "Jacquelina"
+print(hamming_distance(slack_username, twitter_handle))
